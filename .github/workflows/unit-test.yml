@@ -1,0 +1,28 @@
+name: Unit Test
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+on:
+  pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
+  push: { branches: [ develop ] }
+
+jobs:
+  unit-tests:
+    uses: whooshing-workshop/ci/.github/workflows/run-unit-tests.yml@develop
+    with:
+      # ios_scheme_name: whooshing.template-privilege-module
+      ios_scheme_name: ''  # 暂时禁止 IOS 测试，因其会导致 CI 测试崩溃，本地 ios 测试通过
+      work_dir: "."
+
+      extra_flags: " " # 阻止增加额外的 flags
+      with_release_mode_testing: true
+      with_musl: false
+      with_api_check: false
+      ios_xcodebuild_action: ''
+      
+      with_pg_configs: |
+        postgres postgres password 5432 file_storage privilege_module
+
+    secrets: inherit
