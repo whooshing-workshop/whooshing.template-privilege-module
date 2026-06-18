@@ -12,7 +12,7 @@ struct AppTests {
         let logger = Logger(label: "testing")
         let bootstrap = try await Whooshing<Https>.bootstrap(
             .testing(DebuggingParameters.httpsDebuggingData(dbServiceConfigs: Woo.dbServices)),
-            driverKeys: [FileStorageDriverKey.self],
+            driverKeys: DebuggingParameters.driverKeys,
             logger: logger
         ).get()
         let woo = try await Whooshing.make(bootstrap).get()
