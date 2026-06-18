@@ -1,0 +1,1 @@
+# whooshing.template-privilege-module
