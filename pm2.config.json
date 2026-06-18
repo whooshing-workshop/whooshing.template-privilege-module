@@ -1,0 +1,9 @@
+{
+    "apps": [
+        {
+            "name": "whooshing.template-privilege-module",
+            "cwd": "./",
+            "script": "./App --env production"
+        }
+    ]
+}
