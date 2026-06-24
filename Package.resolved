@@ -1,5 +1,5 @@
 {
-  "originHash" : "04d4a3d919e582c91c1e18eb37799104271a5cc16cc100de4b5ac6859ba5eb03",
+  "originHash" : "eb777730468cebe68020083346713d3b1ad861f664379e079a28785a27db8dba",
   "pins" : [
     {
       "identity" : "anycodable",
@@ -339,8 +339,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing-vapor.git",
       "state" : {
-        "revision" : "230fd07405494ffb8f786c375a6f8d67c381e2ae",
-        "version" : "1.1.2"
+        "revision" : "1c2e4df37347d91032627bb163f4bf51c0a427e7",
+        "version" : "1.1.5"
       }
     },
     {
@@ -348,8 +348,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.driver-file-storage.git",
       "state" : {
-        "revision" : "ce7283146e93c65c4652b19e8f3ae6ea0c195cfe",
-        "version" : "1.0.4"
+        "revision" : "4ac3e9f26dd584cadd98c6a06325de8ca586cc4e",
+        "version" : "1.0.6"
       }
     },
     {
@@ -357,8 +357,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.driver-privilege-system.git",
       "state" : {
-        "revision" : "b181419d0359248cf957dcd3957bafd02a96f7d4",
-        "version" : "1.0.0"
+        "revision" : "39ee40d70b680a3256e37f8563c5ca9c62939b30",
+        "version" : "1.0.1"
       }
     },
     {
@@ -366,8 +366,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.toolbox-basic.git",
       "state" : {
-        "revision" : "b3654ddebd1d507a0c94b086783e96d20aeeb17d",
-        "version" : "1.5.10"
+        "revision" : "a77dacf42d676243a9ca6738eba21bc3f7b646eb",
+        "version" : "1.6.2"
       }
     },
     {
@@ -375,8 +375,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.toolbox-client",
       "state" : {
-        "revision" : "453e3aa9ae6d5a8ba03cbdf6f4ddc7196adffbbc",
-        "version" : "1.2.8"
+        "revision" : "c29631e49341cfc591baf33095e43e3f57337b9f",
+        "version" : "1.3.2"
       }
     },
     {
@@ -384,8 +384,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.toolbox-file-storage",
       "state" : {
-        "revision" : "f287b73ae3205d226c04e8403cb09a88ea22340e",
-        "version" : "1.0.6"
+        "revision" : "22b0e7aeb3c887ea4f042a108031f3554aa5a162",
+        "version" : "1.0.9"
       }
     },
     {
@@ -393,8 +393,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.toolbox-opa",
       "state" : {
-        "revision" : "654dbf0d53d4b3d805fc6230677aca36f37e8047",
-        "version" : "1.0.3"
+        "revision" : "21564ee2631adc7dfa88923cffb7033f88685d63",
+        "version" : "1.0.5"
       }
     },
     {
@@ -402,8 +402,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.toolbox-pgsql.git",
       "state" : {
-        "revision" : "e49b7abca73ea443a5084643403116313409a928",
-        "version" : "1.0.10"
+        "revision" : "53a97075e0369a981f767f80642b7394191b2765",
+        "version" : "1.1.2"
       }
     },
     {
@@ -411,8 +411,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.toolbox-privilege-system",
       "state" : {
-        "revision" : "45e83c836f816c2db6a5d1b05ee688bf42fc8cc8",
-        "version" : "1.0.0"
+        "revision" : "cf383edcfc1033764dc5ba462c8984687526015a",
+        "version" : "1.0.6"
       }
     },
     {
@@ -420,8 +420,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.toolbox-server.git",
       "state" : {
-        "revision" : "846f62a48fdc23bc833bd7502e1aa606badeb289",
-        "version" : "1.2.5"
+        "revision" : "97fc0479d53ed454ee66544eda621a5c6f642564",
+        "version" : "1.2.9"
       }
     },
     {
@@ -429,8 +429,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.toolbox-websocket.git",
       "state" : {
-        "revision" : "2e042b6d29b2c2d8e1bf3a01605e6698accdd418",
-        "version" : "1.1.5"
+        "revision" : "7f8cd83143b9826d2ae7a208fa481aae35d9b47d",
+        "version" : "1.1.7"
       }
     }
   ],

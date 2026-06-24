@@ -24,21 +24,11 @@ let package = Package(
     ],
     dependencies: [
         // 💧 Vapor -- Swift 服务器端第三方框架
-        .package(url: "https://github.com/whooshing-workshop/whooshing-vapor.git", from: "1.1.2"),
-        // 🪩 Whooshing 基本工具
-        .package(url: "https://github.com/whooshing-workshop/whooshing.toolbox-basic.git", from: "1.5.10"),
-        // ⭐️ Whooshing 服务模块系统
-        .package(url: "https://github.com/whooshing-workshop/whooshing.toolbox-server.git", from: "1.2.5"),
-        // 🗄 PostgreSQL 数据库的 ORM(对象关系映射)
-        .package(url: "https://github.com/whooshing-workshop/whooshing.toolbox-pgsql.git", from: "1.0.10"),
-        // 📁 Whooshing 文件加密系统模块
-        .package(url: "https://github.com/whooshing-workshop/whooshing.toolbox-file-storage", from: "1.0.6"),
+        .package(url: "https://github.com/whooshing-workshop/whooshing-vapor.git", from: "1.1.5"),
         // 📁 Whooshing 文件加密系统模块驱动
-        .package(url: "https://github.com/whooshing-workshop/whooshing.driver-file-storage.git", from: "1.0.4"),
-        // 🪩 Whooshing 权限系统模块
-        .package(url: "https://github.com/whooshing-workshop/whooshing.toolbox-privilege-system", from: "1.0.0"),
+        .package(url: "https://github.com/whooshing-workshop/whooshing.driver-file-storage.git", from: "1.0.6"),
         // 🪩 Whooshing 权限系统模块驱动
-        .package(url: "https://github.com/whooshing-workshop/whooshing.driver-privilege-system.git", from: "1.0.0"),
+        .package(url: "https://github.com/whooshing-workshop/whooshing.driver-privilege-system.git", from: "1.0.1"),
         // 🔵 Swift 高性能网络通讯模块
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0")
     ],
@@ -48,14 +38,7 @@ let package = Package(
             dependencies: [
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "Vapor", package: "whooshing-vapor"),
-                .product(name: "PgSQL", package: "whooshing.toolbox-pgsql"),
-                .product(name: "Cryptos", package: "whooshing.toolbox-basic"),
-                .product(name: "ErrorHandle", package: "whooshing.toolbox-basic"),
-                .product(name: "WhooshingServer", package: "whooshing.toolbox-server"),
-                .product(name: "FileStorage", package: "whooshing.toolbox-file-storage"),
                 .product(name: "FileStorageDriver", package: "whooshing.driver-file-storage"),
-                .product(name: "PrivilegeModule", package: "whooshing.toolbox-privilege-system"),
                 .product(name: "PrivilegeModuleDriver", package: "whooshing.driver-privilege-system")
             ],
             swiftSettings: swiftSettings

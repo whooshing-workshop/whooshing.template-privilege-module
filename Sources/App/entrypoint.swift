@@ -1,14 +1,5 @@
-import Vapor
-import Logging
-import NIOCore
-import NIOPosix
-import Cryptos
-import ErrorHandle
-import FileStorage
 import FileStorageDriver
 import PrivilegeModuleDriver
-import LoggingAdvanced
-import WhooshingServer
 
 /// 该函数为入口函数，是整个 Whooshing 服务的执行起始点
 /// 该函数根据环境变量(API, HTTPS)分别设置服务类型，并进行初始化
@@ -209,24 +200,6 @@ extension DebuggingParameters {
         )
     }
     
-    static func apiDebuggingData(dbServiceConfigs: [Environment.DBService] = []) -> Api.Debuging {
-        .init(
-            config: Environment.Config(
-                id: Woo.moduleId,
-                name: Woo.appName.lowercased(),
-                port: apiListenPort,
-                dbServices: dbServiceConfigs
-            )
-            .load(fileStorage: Woo.fileStorageParas)
-            .load(privilegeModule: Woo.privilegeModuleParas)
-        ) { authData in
-            guard authData.credential.base64EncodedString() == apiClientCredential else {
-                throw Abort(.badRequest, reason: "用户凭据无效")
-            }
-            return try Api.Debuging.testingTokenAuth(with: apiClientTokenStr, encrypted: authData.tokenEncrypted)
-        }
-    }
-    
     static func httpsDebuggingData(dbServiceConfigs: [Environment.DBService] = []) -> Https.Debuging{
         .init(
             config: Environment.Config(
@@ -238,6 +211,25 @@ extension DebuggingParameters {
             .load(fileStorage: Woo.fileStorageParas)
             .load(privilegeModule: Woo.privilegeModuleParas)
         )
+    }
+    
+    static func apiDebuggingData(dbServiceConfigs: [Environment.DBService] = []) -> Api.Debuging {
+        .init(
+            config: Environment.Config(
+                id: Woo.moduleId,
+                name: Woo.appName.lowercased(),
+                port: apiListenPort,
+                dbServices: dbServiceConfigs
+            )
+            .load(fileStorage: Woo.fileStorageParas)
+            .load(privilegeModule: Woo.privilegeModuleParas),
+            authenticationTarget: .url(.init(string: "http://example.com")!)
+        ) { authData in
+            guard authData.credential.base64EncodedString() == apiClientCredential else {
+                throw Abort(.badRequest, reason: "用户凭据无效")
+            }
+            return try Api.Debuging.testingTokenAuth(with: apiClientTokenStr, encrypted: authData.tokenEncrypted)
+        }
     }
 }
 
@@ -267,30 +259,6 @@ extension Woo {
         }
     }()
     
-    #if API
-    private static let apiBootstrap: Whooshing<Api>.BootstrapParas = {
-        asyncToSync {
-            var apiMode = Whooshing<Api>.Mode.detect(testingAllowed ? DebuggingParameters.apiDebuggingData(dbServiceConfigs: dbServices) : nil)
-            apiMode.envrionment = mode.envrionment
-            return try await Whooshing.bootstrap(apiMode, driverKeys: DebuggingParameters.driverKeys, logger: Self.logger.derive(subId: "api")).get()
-        }
-    }()
-
-    static let api: Whooshing<Api> = {
-        asyncToSync {
-            let api = try await Whooshing.make(apiBootstrap, with: inline).get()
-            do {
-                try await Configuration.api(api, app: api.app)
-            } catch {
-                api.logger.report(error: error)
-                try? await api.asyncShutdown().get()
-                throw error
-            }
-            return api
-        }
-    }()
-    #endif
-
     #if HTTPS
     private static let httpsBootstrap: Whooshing<Https>.BootstrapParas = {
         asyncToSync {
@@ -314,17 +282,41 @@ extension Woo {
         }
     }()
     #endif
+    
+    #if API
+    private static let apiBootstrap: Whooshing<Api>.BootstrapParas = {
+        asyncToSync {
+            var apiMode = Whooshing<Api>.Mode.detect(testingAllowed ? DebuggingParameters.apiDebuggingData(dbServiceConfigs: dbServices) : nil)
+            apiMode.envrionment = mode.envrionment
+            return try await Whooshing.bootstrap(apiMode, driverKeys: DebuggingParameters.driverKeys, logger: Self.logger.derive(subId: "api")).get()
+        }
+    }()
+
+    static let api: Whooshing<Api> = {
+        asyncToSync {
+            let api = try await Whooshing.make(apiBootstrap, with: inline, with: nil, authGuard: ApiAuthGuardMiddleware()).get()
+            do {
+                try await Configuration.api(api, app: api.app)
+            } catch {
+                api.logger.report(error: error)
+                try? await api.asyncShutdown().get()
+                throw error
+            }
+            return api
+        }
+    }()
+    #endif
 
     static func bootstrap() {
         var factories: [LoggingFactory] = []
         
         factories.append(inlineBootstrap.loggingFactory)
         
-        #if API
-        factories.append(apiBootstrap.loggingFactory)
-        #endif
         #if HTTPS
         factories.append(httpsBootstrap.loggingFactory)
+        #endif
+        #if API
+        factories.append(apiBootstrap.loggingFactory)
         #endif
         
         let factory = LoggingFactory(factories: factories)
@@ -345,12 +337,12 @@ extension Woo {
         async let _ = inline.executeWithAsyncShutdown().get()
         #endif
         
-        #if API
-        async let _ = api.executeWithAsyncShutdown().get()
-        #endif
-        
         #if HTTPS
         async let _ = https.executeWithAsyncShutdown().get()
+        #endif
+        
+        #if API
+        async let _ = api.executeWithAsyncShutdown().get()
         #endif
     }
 }
