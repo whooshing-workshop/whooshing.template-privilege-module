@@ -1,5 +1,5 @@
 import Fluent
-import Vapor
+import VaporTube
 
 struct UserController: RouteCollection {
 

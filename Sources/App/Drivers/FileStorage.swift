@@ -1,8 +1,4 @@
-import Vapor
-import Logging
-import FileStorage
 import FileStorageDriver
-import WhooshingServer
 
 /// 在此处配置文件加密存储模块，仅允许配置一个，默认为全局单例模式
 /// 文件加密存储模块需要将文件索引存入一个数据库中，因此它需要绑定一个数据库实例
@@ -16,8 +12,8 @@ extension FileStorage {
     /// 自动创建根文件夹(加密文件的存储文件夹，相对于沙盒的路径)如果其不存在
     /// 若在独立测试环境中，则启动 debugging 模式，否则使用正常的生产或开发模式
     static let `default`: FileStorage = {
-        Woo.inline.syncMakeFileStorage(
-            for: db(name: "file_storage", from: "default", in: Woo.inline),
+        Woo.nexus.syncMakeFileStorage(
+            for: db(name: "file_storage", from: "default"),
             storagePath: "default",
             logger: Woo.logger,
             dirCreateAction: .createIfNeed(withIntermediateDirectories: true),

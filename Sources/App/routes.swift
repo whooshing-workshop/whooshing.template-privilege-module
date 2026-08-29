@@ -1,16 +1,16 @@
-import Vapor
-import WhooshingServer
 import Fluent
+import VaporTube
+import PrivilegeModuleDriver
 
-func routes<T>(_ woo: Whooshing<T>, _ app: Application) throws where T: ServiceType {
-    app.get { req async in
+func routes(_ nexus: Nexus<VaporTube>) throws {
+    nexus.tube.app.get { req async in
         "It works!"
     }
 
-    app.get("hello") { req async -> String in
+    nexus.tube.app.get("hello") { req async -> String in
         "Hello, world!"
     }
     
-    try app.register(collection: UserController())
-    try app.register(collection: FileController())
+    try nexus.tube.app.register(collection: UserController())
+    try nexus.tube.app.register(collection: FileController())
 }

@@ -1,7 +1,6 @@
 import Fluent
-import Vapor
 import FileStorage
-import WhooshingServer
+import VaporTube
 import Foundation
 
 struct FileAttributes: Content {

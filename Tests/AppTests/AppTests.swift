@@ -4,38 +4,38 @@ import Testing
 import Fluent
 import FileStorage
 import FileStorageDriver
-import WhooshingServer
+import VaporTube
 
 @Suite("App Tests with DB", .serialized)
 struct AppTests {
-    private func withApp(_ test: (Whooshing<Https>, Application) async throws -> ()) async throws {
+    private func withApp(_ test: (Nexus<VaporTube>) async throws -> ()) async throws {
         let logger = Logger(label: "testing")
-        let bootstrap = try await Whooshing<Https>.bootstrap(
-            .testing(DebuggingParameters.httpsDebuggingData(dbServiceConfigs: Woo.dbServices)),
-            driverKeys: DebuggingParameters.driverKeys,
+        
+        let bootstrap = try await Bootstrap.run(
+            .testing(DebuggingParameters.configData(dbServiceConfigs: DebuggingParameters.dbServices)),
+            driverKeys: Woo.driverKeys,
             logger: logger
         ).get()
-        let woo = try await Whooshing.make(bootstrap).get()
+        
+        let tube = try await VaporTube.make(bootstrap).get()
+        let nexus = Nexus(tube: tube, bootstrap: bootstrap)
         do {
-            try await Configuration.https(woo, app: woo.app)
-            for db in woo.databases {
-                try await Configuration.migrationRegister(in: db, for: [woo])
-            }
-            try await woo.app.autoMigrate()
-            try await test(woo, woo.app)
-            try await woo.app.autoRevert()
+            try await configure(nexus)
+            try await nexus.tube.app.autoMigrate()
+            try await test(nexus)
+            try await nexus.tube.app.autoRevert()
         } catch {
-            try? await woo.app.autoRevert()
-            try await woo.asyncShutdown().get()
+            try? await nexus.tube.app.autoRevert()
+            try await nexus.asyncShutdown()
             throw error
         }
-        try await woo.asyncShutdown().get()
+        try await nexus.asyncShutdown()
     }
     
     @Test("Test Hello World Route")
     func helloWorld() async throws {
-        try await withApp { woo, app in
-            try await app.testing().test(.GET, "hello") { res async in
+        try await withApp { nexus in
+            try await nexus.tube.app.testing().test(.GET, "hello") { res async in
                 #expect(res.status == .ok)
                 #expect(res.body.string == "Hello, world!")
             }
@@ -44,11 +44,11 @@ struct AppTests {
     
     @Test("Getting all the Users")
     func getAllUsers() async throws {
-        try await withApp { woo, app in
+        try await withApp { nexus in
             let sampleUsers = [User(email: "email1@example.com", age: 20), User(email: "email2@example.com", age: 21)]
-            try await sampleUsers.create(on: app.db)
+            try await sampleUsers.create(on: nexus.tube.app.db)
             
-            try await app.testing().test(.GET, "users") { res async throws in
+            try await nexus.tube.app.testing().test(.GET, "users") { res async throws in
                 #expect(res.status == .ok)
                 #expect(try res.content.decode([UserDTO].self) == sampleUsers.map { $0.toDTO() } )
             }
@@ -59,12 +59,12 @@ struct AppTests {
     func createUser() async throws {
         let newDTO = UserDTO(email: "email1@example.com", age: 20)
         
-        try await withApp { woo, app in
-            try await app.testing().test(.POST, "users/register", beforeRequest: { req in
+        try await withApp { nexus in
+            try await nexus.tube.app.testing().test(.POST, "users/register", beforeRequest: { req in
                 try req.content.encode(newDTO)
             }) { res async throws in
                 #expect(res.status == .ok)
-                let models = try await User.query(on: app.db).all()
+                let models = try await User.query(on: nexus.tube.app.db).all()
                 #expect(models.map({ $0.toDTO() }) == [newDTO])
             }
         }
@@ -74,12 +74,12 @@ struct AppTests {
     func deleteUser() async throws {
         let testUsers = [User(email: "email1@example.com", age: 20), User(email: "email2@example.com", age: 21)]
         
-        try await withApp { woo, app in
-            try await testUsers.create(on: app.db)
+        try await withApp { nexus in
+            try await testUsers.create(on: nexus.tube.app.db)
             
-            try await app.testing().test(.DELETE, "users/\(testUsers[0].email)") { res async throws in
+            try await nexus.tube.app.testing().test(.DELETE, "users/\(testUsers[0].email)") { res async throws in
                 #expect(res.status == .noContent)
-                let userShouldNotExist = try await User.query(on: app.db).filter(\.$email == testUsers[0].email).first()
+                let userShouldNotExist = try await User.query(on: nexus.tube.app.db).filter(\.$email == testUsers[0].email).first()
                 #expect(userShouldNotExist == nil)
             }
         }
@@ -89,8 +89,8 @@ struct AppTests {
     
     @Test("Store a File")
     func storeFile() async throws {
-        try await withApp { woo, app in
-            try await app.testing().test(.PUT, "file", beforeRequest: { req in
+        try await withApp { nexus in
+            try await nexus.tube.app.testing().test(.PUT, "file", beforeRequest: { req in
                 try req.content.encode(Self.file)
             }) { res in
                 #expect(res.status == .ok)
@@ -102,8 +102,8 @@ struct AppTests {
     
     @Test("Read a File")
     func readFile() async throws {
-        try await withApp { woo, app in
-            try await app.testing().test(.POST, "file", beforeRequest: { req in
+        try await withApp { nexus in
+            try await nexus.tube.app.testing().test(.POST, "file", beforeRequest: { req in
                 try req.content.encode(Self.file.path)
             }) { res in
                 #expect(res.status == .ok)
@@ -115,8 +115,8 @@ struct AppTests {
     
     @Test("Delete a File")
     func deleeteFile() async throws {
-        try await withApp { woo, app in
-            try await app.testing().test(.DELETE, "file", beforeRequest: { req in
+        try await withApp { nexus in
+            try await nexus.tube.app.testing().test(.DELETE, "file", beforeRequest: { req in
                 try req.content.encode(Self.file.path)
             }) { res in
                 #expect(res.status == .ok)
@@ -139,5 +139,4 @@ extension Data {
         }
         return data
     }
-
 }
