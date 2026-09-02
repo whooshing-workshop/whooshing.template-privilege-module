@@ -1,5 +1,5 @@
 import FileStorageDriver
-import PrivilegeSystemDriver
+import PrivilegeModuleDriver
 
 func driverInits() {
     _ = PrivilegeModule.module
