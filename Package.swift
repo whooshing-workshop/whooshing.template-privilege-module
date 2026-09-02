@@ -15,11 +15,11 @@ let package = Package(
         // 📁 Whooshing 文件加密系统模块驱动
         .package(url: "https://github.com/whooshing-workshop/whooshing.driver-file-storage.git", from: "1.1.2"),
         // ⭐️ Vapor 管道通讯模块
-        .package(url: "https://github.com/whooshing-workshop/whooshing.tube-vapor", from: "0.0.6"),
+        .package(url: "https://github.com/whooshing-workshop/whooshing.tube-vapor", from: "0.0.9"),
         // 🪩 Whooshing 权限系统模块驱动
-        .package(url: "https://github.com/whooshing-workshop/whooshing.driver-privilege-system.git", from: "1.0.5"),
+         .package(url: "https://github.com/whooshing-workshop/whooshing.driver-privilege-system.git", from: "1.0.7"),
         // 🔵 Swift 高性能网络通讯模块
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0")
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
     ],
     targets: [
         .executableTarget(

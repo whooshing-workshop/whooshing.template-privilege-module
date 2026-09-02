@@ -13,4 +13,20 @@ func routes(_ nexus: Nexus<VaporTube>) throws {
     
     try nexus.tube.app.register(collection: UserController())
     try nexus.tube.app.register(collection: FileController())
+    
+    // 用于服务间通讯的路由
+    // 该路由将会先确认来源服务是合法的，否则拒绝连接
+    let inlineProtected = nexus.tube.app.grouped("inline").grouped(ServiceValidator(), ServiceValidator.Identifier.guardMiddleware())
+    inlineProtected.get("test") { req async throws -> String in
+        let id = try req.auth.require(ServiceValidator.Identifier.self)
+        return id.incomingId.uuidString
+    }
+    
+    // 用于需要用户身份验证的路由
+    // 该路由将会先确认用户是否是合法的，否则拒绝连线
+    let apiProtected = nexus.tube.app.grouped("api").grouped(ApiValidator(from: nexus), ApiAuthGuardMiddleware(), AuthData.guardMiddleware())
+    apiProtected.get("test") { req async throws -> String in
+        let auth = try req.auth.require(AuthData.self)
+        return auth.token.user.email
+    }
 }

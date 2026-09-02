@@ -59,3 +59,7 @@ extension PrivilegeModule<ResourceList> {
         )
     }()
 }
+
+extension Request {
+    var privilegeModule: PrivilegeModule<ResourceList> { PrivilegeModule.module }
+}

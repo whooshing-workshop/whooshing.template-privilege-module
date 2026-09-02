@@ -65,13 +65,6 @@ func db(name: String, from service: String) -> Environment.DB {
 /// 用于调试模式的参数，仅在独立调试和测试模式下生效，不会在生产或非独立开发模式下生效
 /// 关于模式，见 `Whooshing.Mode`
 struct DebuggingParameters {
-    /// 客户端访问 api 服务时所必须持有的凭据，若凭据不正确，则会拒绝该用户的连线
-    static let clientCredential = "bRRPIiYbt0t4RzfqeeHSkg=="
-    
-    /// 客户端访问 api 服务时所必须持有的口令，若口令不正确，则会拒绝该用户的连线
-    static let clientToken = SendableSymmKey(key: .init(data: Data(base64Encoded: clientTokenStr)!))
-    static let clientTokenStr = "jXTz4vTQk0O/XFIjWQIHLC7z9/E0/4VtEb+LkF8IcA4="
-    
     /// 服务监听的段口号
     static let port = 6500
     
@@ -104,9 +97,47 @@ struct DebuggingParameters {
         )
     )
     
-    /// 本模块的 ID，取自 DebugingModuleController 中记录的服务 ID 列表的第一个
+    /// 客户端访问 api 服务时所必须持有的凭据
+    ///
+    /// 若有用户要访问该模块的 API 路由，其提供的凭据必须在以下白名单中
+    /// 若白名单未命中，则会拒绝该用户的连线
+    /// apiCredentials 与 apiTokens 数组当一对一使用，非一对多
+    /// 作为例子仅提供 2 个，你可以按需添加或减少
+    static let apiCredentials = [
+        "0rZ5GsQqysbOvm/Ya7+QhA==",
+        "bRRPIiYbt0t4RzfqeeHSkg=="
+    ]
+    
+    /// 客户端访问 api 服务时所必须持有的口令，若口令不正确，则会拒绝该用户的连线
+    /// 作为例子仅提供 2 个，你可以按需添加或减少
+    static let apiTokens = [
+        "4r0MHtw29zNz+DfyDo8Bzvn02kyoewqYNndSo38AuLY=",
+        "jXTz4vTQk0O/XFIjWQIHLC7z9/E0/4VtEb+LkF8IcA4="
+    ]
+    
+    /// api 服务的用户身份验证策略
+    ///
+    /// 无论是 `.debuging` 还是 `.normal`，该设置**仅生效与本地独立测试**
+    /// 在生产环境的服务环境中，api 验证会以所传入的环境变量为准
+    ///
+    /// 在调试模式(`.debuging`)下可设置身份白名单，请见 apiCredentials 与 apiTokens
+    /// 在正常模式(`.normal`)下可设置认证服务的 URL 链接。届时，本模块将用户身份信息转发与该认证服务以进行验证
+    ///
+    /// 若要连接到本机上的另一个权限认证模块进程(运行在 6501 端口)，可使用
+    /// `static let apiValidateStrategy: ApiValidator.Strategy = .normal(authURL: .init(string: "http://localhost:6501")!)`
+    ///
+    /// 默认提供 debug 配置
+    static let apiValidateStrategy: ApiValidator.Strategy = .debuging(
+        whitelist: .init(
+            uniqueKeysWithValues: apiCredentials.enumerated().map {
+                ($0.element, SendableSymmKey(key: .init(data: Data(base64Encoded: apiTokens[$0.offset])!)))
+            }
+        )
+    )
+    
+    /// 本模块的 ID，取自 DebugingModuleController 中记录的服务 ID 列表的第二个(第一个一般是认证模块的 ID)
     /// 仅在生产环境为开发或测试模式才生效
-    static let moduleId = serviceIds.first!
+    static let moduleId = serviceIds[1]
     
     /// 该模块接受的来源服务的 ID
     ///
@@ -125,7 +156,7 @@ struct DebuggingParameters {
     /// 模块管理器的访问链接，模块管理器登记了所有模块的信息
     /// 需要用于来源服务验证，作为测试，可走本地巡回路径
     /// 仅在生产环境为开发或测试模式才生效
-    static let managerURL: URL = .init(string: "http://localhost")!
+    static let managerURL: URL = .init(string: "http://localhost:\(port)")!
     
     /// 初始化你的 PostgreSQL 配置
     /// 这些参数仅在独立测试环境中可用
@@ -176,7 +207,8 @@ extension DebuggingParameters {
             name: Woo.appName.lowercased(),
             port: port,
             dbServices: dbServiceConfigs,
-            managerUrl: managerURL
+            managerUrl: managerURL,
+            apiStrategy: apiValidateStrategy
         )
         .load(fileStorage: DebuggingParameters.fileStorageParas)
         .load(privilegeModule: DebuggingParameters.privilegeModuleParas)
@@ -198,14 +230,6 @@ extension Woo {
         try! asyncToSync {
             let tube = try await VaporTube.make(bootstrap).get()
             let nexus = Nexus(tube: tube, bootstrap: bootstrap)
-            
-            do {
-                try await configure(nexus)
-            } catch {
-                nexus.logger.report(error: error)
-                try? await nexus.asyncShutdown()
-                throw error
-            }
             return nexus
         }
     }()
@@ -225,6 +249,8 @@ extension Woo {
 
     static func main() async throws {
         loggerBootstrap()
+        driverInits()
+        try await configure(nexus)
         try await nexus.executeWithAsyncShutdown()
     }
 }
