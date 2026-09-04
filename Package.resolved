@@ -1,5 +1,5 @@
 {
-  "originHash" : "62c20bae9ad811f83a17a01503c6fcf72fdcc47bc2a028e5955b6e902a538813",
+  "originHash" : "4dca714079aad8efe5c51a2455bfe0fd90784ec64a6f85ed18e84b67dc26f968",
   "pins" : [
     {
       "identity" : "anycodable",
@@ -357,8 +357,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.driver-privilege-system.git",
       "state" : {
-        "revision" : "f5688e7f8ad40361f724ac033cdcc491b5325684",
-        "version" : "1.0.7"
+        "branch" : "develop",
+        "revision" : "ce323524ba88354df23b1f179fa49457155e6a59"
       }
     },
     {
@@ -366,8 +366,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.nexus",
       "state" : {
-        "revision" : "6d2523159ea12bb937f15c390f5f724c1658cce7",
-        "version" : "0.0.9"
+        "branch" : "develop",
+        "revision" : "c643a02b32921dbd3cb922d3dda145abe7b73fa8"
       }
     },
     {
@@ -411,8 +411,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.toolbox-privilege-system",
       "state" : {
-        "revision" : "f5f5b9922aea3b106cb362f341d21528cb7eea78",
-        "version" : "1.0.9"
+        "branch" : "develop",
+        "revision" : "f8950fa2786d153365a09455ebfebc9f90a3d99a"
       }
     },
     {
@@ -420,8 +420,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/whooshing-workshop/whooshing.tube-vapor",
       "state" : {
-        "revision" : "dac4000fe2906ac794e6b795d40d2e736538bcb5",
-        "version" : "0.0.9"
+        "branch" : "develop",
+        "revision" : "465c71972762f3b27a54a27e98884ff90cc8b5e0"
       }
     }
   ],

@@ -24,9 +24,8 @@ func routes(_ nexus: Nexus<VaporTube>) throws {
     
     // 用于需要用户身份验证的路由
     // 该路由将会先确认用户是否是合法的，否则拒绝连线
-    let apiProtected = nexus.tube.app.grouped("api").grouped(ApiValidator(from: nexus), ApiAuthGuardMiddleware(), AuthData.guardMiddleware())
-    apiProtected.get("test") { req async throws -> String in
-        let auth = try req.auth.require(AuthData.self)
-        return auth.token.user.email
+    let apiProtected = nexus.tube.app.grouped("api").apiProtectGrouped(in: nexus)
+    apiProtected.get("test") { req async throws in
+        try req.auth.require(AuthData.self)
     }
 }

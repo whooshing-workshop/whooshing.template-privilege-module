@@ -15,9 +15,9 @@ let package = Package(
         // 📁 Whooshing 文件加密系统模块驱动
         .package(url: "https://github.com/whooshing-workshop/whooshing.driver-file-storage.git", from: "1.1.2"),
         // ⭐️ Vapor 管道通讯模块
-        .package(url: "https://github.com/whooshing-workshop/whooshing.tube-vapor", from: "0.0.9"),
+        .package(url: "https://github.com/whooshing-workshop/whooshing.tube-vapor", branch: "develop"),
         // 🪩 Whooshing 权限系统模块驱动
-         .package(url: "https://github.com/whooshing-workshop/whooshing.driver-privilege-system.git", from: "1.0.7"),
+         .package(url: "https://github.com/whooshing-workshop/whooshing.driver-privilege-system.git", branch: "develop"),
         // 🔵 Swift 高性能网络通讯模块
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
     ],

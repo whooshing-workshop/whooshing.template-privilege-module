@@ -8,6 +8,7 @@ import PrivilegeModuleDriver
 /// 作为例子，可见 `FileResource` 类型，其 type 类属性被设置为 .file
 enum ResourceList: String, ResourceTypeList {
     case file
+    case router
 }
 
 // MARK: - 资源定义
@@ -25,7 +26,7 @@ struct FileResource {
     static let type: ResourceList = .file
     
     /// 该(文件)资源的名称
-    let name: String
+    let appId: String
     
     /// 该文件的路径
     let path: String
@@ -37,6 +38,18 @@ struct FileResource {
         case read
         /// 文件写入权限
         case write
+    }
+}
+
+@Resource
+struct RouterResource {
+    typealias ResourceType = ResourceList
+    static let type: ResourceList = .router
+    
+    var appId: String
+    
+    enum Operations: String, OperationList {
+        case run
     }
 }
 

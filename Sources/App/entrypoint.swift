@@ -94,46 +94,127 @@ struct DebuggingParameters {
             scheme: .http,
             port: 8181,
             host: "localhost"
-        )
+        ),
+        apiStrategy: apiValidateStrategy
     )
     
-    /// 客户端访问 api 服务时所必须持有的凭据
+    /// 测试环境中权限模块用于创建 nobody 角色(无权限基本角色，或称默认角色)的 ID(除非其进行过修改)
     ///
-    /// 若有用户要访问该模块的 API 路由，其提供的凭据必须在以下白名单中
-    /// 若白名单未命中，则会拒绝该用户的连线
-    /// apiCredentials 与 apiTokens 数组当一对一使用，非一对多
-    /// 作为例子仅提供 2 个，你可以按需添加或减少
-    static let apiCredentials = [
-        "0rZ5GsQqysbOvm/Ya7+QhA==",
-        "bRRPIiYbt0t4RzfqeeHSkg=="
+    /// 指定 ID 创建用于方便测试或其他目的，指定 nil 表示其使用了随机的 UUID
+    /// 该参数只应用于测试环境
+    static let nobodyRoleId: UUID? = UUID(uuidString: "E7B2D19A-54F6-4A08-8C3E-96B719E2FD41")!
+    
+    /// 用于测试的用户清单
+    ///
+    /// 该用户列表仅会在测试模式下生效，生产环境不生效
+    /// 作为例子，仅提供 3 个测试用户
+    /// 使用 `.testMake(...)` 建立测试模型仅当用于测试，用于生产环境可能导致严重后果且造成程序崩溃
+    static let testingUsers: [QUser] = [
+        QUser.testMake(
+            id: .init("A3F8B2C4-91E5-4D7A-83B1-5E6C9F01A4D2")!,
+            email: "test@testing.org",
+            info: .set(.testMake(
+                id: .init("7E19C5B2-4A8F-4D23-9B67-1C8E3F0A5D4B")!,
+                nickname: "app tester",
+                identifier: "FAKE_15827192102812",
+                birthday: try! Date("2001-03-21T00:00:00Z", strategy: .iso8601),
+                user: .unset(.init("A3F8B2C4-91E5-4D7A-83B1-5E6C9F01A4D2")!),
+                alternateEmails: .set([
+                    .testMake(
+                        id: UUID(),
+                        value: "secondary_email@testing.org",
+                        order: 0,
+                        userInfo: .unset(.init("7E19C5B2-4A8F-4D23-9B67-1C8E3F0A5D4B")!)
+                    )
+                ])
+            ))
+        ),
+        QUser.testMake(
+            id: .init("8A4C2E9B-1D7F-4B5A-9E31-7C5F0B8D3A6E")!,
+            email: "moses@testing.org",
+            roles: .set([
+                testingRoles[1],
+                testingRoles[2]
+            ])
+        ),
+        QUser.testMake(
+            id: .init("C7F1D9A4-6B3E-4A82-85D0-3E9C1B7A5F2D")!,
+            email: "alice_official@testing.org",
+            roles: .set([
+                testingRoles[2]
+            ])
+        )
     ]
     
-    /// 客户端访问 api 服务时所必须持有的口令，若口令不正确，则会拒绝该用户的连线
+    /// 用于测试的角色清单
+    ///
+    /// 该角色列表仅会在测试模式下生效，生产环境不生效
+    /// 作为例子，仅提供 3 个测试角色
+    /// 使用 `.testMake(...)` 建立测试模型仅当用于测试，用于生产环境可能导致严重后果且造成程序崩溃
+    static let testingRoles: [QRole] = [
+        QRole.testMake(
+            id: .init("2F8A1B5C-9E4D-4C7A-81F3-0D6B5E9A2C7F")!,
+            name: "App Tester",
+            summary: "服务测试员"
+        ),
+        QRole.testMake(
+            id: .init("B9C2E5F1-7A3D-4B8E-9210-4F8A6C3D5E7B")!,
+            name: "System Maintainer",
+            summary: "系统维护工程师"
+        ),
+        QRole.testMake(
+            id: .init("5D1E8A3C-4B9F-4F72-8C5A-0E3B7D9F1A6C")!,
+            name: "Logistics Support",
+            summary: "后勤保障部门员工"
+        ),
+    ]
+    
+    /// 客户端访问 api 服务时所必须持有的身份数据
+    ///
+    /// 若有用户要访问该模块的 API 路由，其提供的凭据，口令及所用的角色身份必须在以下白名单中
+    /// 若白名单未命中，则会拒绝该用户的连线
     /// 作为例子仅提供 2 个，你可以按需添加或减少
-    static let apiTokens = [
-        "4r0MHtw29zNz+DfyDo8Bzvn02kyoewqYNndSo38AuLY=",
-        "jXTz4vTQk0O/XFIjWQIHLC7z9/E0/4VtEb+LkF8IcA4="
+    static let apiAuthenticates = [
+        WhitelistAuthData(
+            token: .testMake(
+                credential: "0rZ5GsQqysbOvm/Ya7+QhA==",
+                token: "4r0MHtw29zNz+DfyDo8Bzvn02kyoewqYNndSo38AuLY=",
+                user: .set(testingUsers[0])
+            ),
+            roles: [
+                testingRoles[0]
+            ]
+        ),
+        WhitelistAuthData(
+            token: .testMake(
+                credential: "bRRPIiYbt0t4RzfqeeHSkg==",
+                token: "jXTz4vTQk0O/XFIjWQIHLC7z9/E0/4VtEb+LkF8IcA4=",
+                user: .set(testingUsers[1])
+            ),
+            roles: [
+                testingRoles[1],
+                testingRoles[2]
+            ]
+        )
     ]
     
     /// api 服务的用户身份验证策略
     ///
-    /// 无论是 `.debuging` 还是 `.normal`，该设置**仅生效与本地独立测试**
+    /// 无论是 `.debuging` 还是 `.remote`，该设置**仅生效与本地独立测试**
     /// 在生产环境的服务环境中，api 验证会以所传入的环境变量为准
     ///
-    /// 在调试模式(`.debuging`)下可设置身份白名单，请见 apiCredentials 与 apiTokens
-    /// 在正常模式(`.normal`)下可设置认证服务的 URL 链接。届时，本模块将用户身份信息转发与该认证服务以进行验证
+    /// 在调试模式(`.debuging`)下可设置身份白名单，请见 apiAuthenticates
+    /// 在正常模式(`.remote`)下可设置认证服务的 URL 链接。届时，本模块将用户身份信息转发与该认证服务以进行验证
+    /// 本模块不支持 `.local(transactor:)` 认证方式
     ///
     /// 若要连接到本机上的另一个权限认证模块进程(运行在 6501 端口)，可使用
-    /// `static let apiValidateStrategy: ApiValidator.Strategy = .normal(authURL: .init(string: "http://localhost:6501")!)`
+    /// `static let apiValidateStrategy: ApiValidator.Strategy = .remote(authURL: .init(string: "http://localhost:6501")!)`
     ///
     /// 默认提供 debug 配置
-    static let apiValidateStrategy: ApiValidator.Strategy = .debuging(
-        whitelist: .init(
-            uniqueKeysWithValues: apiCredentials.enumerated().map {
-                ($0.element, SendableSymmKey(key: .init(data: Data(base64Encoded: apiTokens[$0.offset])!)))
-            }
-        )
-    )
+//    static let apiValidateStrategy: ApiValidator.Strategy = .debuging(
+//        whitelist: apiAuthenticates
+//    )
+    static let apiValidateStrategy: ApiValidator.Strategy = .remote(authURL: .init(string: "http://localhost:6501")!)
     
     /// 本模块的 ID，取自 DebugingModuleController 中记录的服务 ID 列表的第二个(第一个一般是认证模块的 ID)
     /// 仅在生产环境为开发或测试模式才生效
@@ -207,8 +288,7 @@ extension DebuggingParameters {
             name: Woo.appName.lowercased(),
             port: port,
             dbServices: dbServiceConfigs,
-            managerUrl: managerURL,
-            apiStrategy: apiValidateStrategy
+            managerUrl: managerURL
         )
         .load(fileStorage: DebuggingParameters.fileStorageParas)
         .load(privilegeModule: DebuggingParameters.privilegeModuleParas)
