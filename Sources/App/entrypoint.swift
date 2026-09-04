@@ -211,10 +211,9 @@ struct DebuggingParameters {
     /// `static let apiValidateStrategy: ApiValidator.Strategy = .remote(authURL: .init(string: "http://localhost:6501")!)`
     ///
     /// 默认提供 debug 配置
-//    static let apiValidateStrategy: ApiValidator.Strategy = .debuging(
-//        whitelist: apiAuthenticates
-//    )
-    static let apiValidateStrategy: ApiValidator.Strategy = .remote(authURL: .init(string: "http://localhost:6501")!)
+    static let apiValidateStrategy: ApiValidator.Strategy = .debuging(
+        whitelist: apiAuthenticates
+    )
     
     /// 本模块的 ID，取自 DebugingModuleController 中记录的服务 ID 列表的第二个(第一个一般是认证模块的 ID)
     /// 仅在生产环境为开发或测试模式才生效
