@@ -175,10 +175,9 @@ struct DebuggingDatas {
     /// `static let apiValidateStrategy: ApiValidator.Strategy = .remote(authURL: .init(string: "http://localhost:6501")!)`
     ///
     /// 默认提供 debug 配置
-//    static let apiValidateStrategy: ApiValidator.Strategy = .debuging(
-//        whitelist: apiAuthenticates
-//    )
-    static let apiValidateStrategy: ApiValidator.Strategy = .remote(authURL: .init(string: "http://localhost:6501")!)
+    static let apiValidateStrategy: ApiValidator.Strategy = .debuging(
+        whitelist: apiAuthenticates
+    )
     
     /// 权限仲裁的验证策略
     ///
@@ -192,14 +191,13 @@ struct DebuggingDatas {
     /// `static let arbitrateStrategy: ArbitrateStrategy = .remote(arbiURL: .init(string: "http://localhost:6501")!)`
     ///
     /// 默认提供 debug 配置
-//    static let arbitrateStrategy: ArbitrateStrategy = .debuging { (
-//        req: Request,
-//        resource: AnyResource,
-//        operation: AnyOperation
-//    ) async throws -> Bool in
-//        true
-//    }
-    static let arbitrateStrategy: ArbitrateStrategy = .remote(arbiURL: .init(string: "http://localhost:6501")!)
+    static let arbitrateStrategy: ArbitrateStrategy = .debuging { (
+        req: Request,
+        resource: AnyResource,
+        operation: AnyOperation
+    ) async throws -> Bool in
+        true
+    }
     
     /// 该模块接受的来源服务的 ID
     ///

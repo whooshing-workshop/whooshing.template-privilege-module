@@ -13,11 +13,11 @@ let package = Package(
         // 💧 Vapor -- Swift 服务器端第三方框架
         .package(url: "https://github.com/vapor/vapor", from: "4.122.0"),
         // 📁 Whooshing 文件加密系统模块驱动
-        .package(url: "https://github.com/whooshing-workshop/whooshing.driver-file-storage.git", from: "1.1.2"),
+        .package(url: "https://github.com/whooshing-workshop/whooshing.driver-file-storage.git", from: "1.1.3"),
         // ⭐️ Vapor 管道通讯模块
-        .package(url: "https://github.com/whooshing-workshop/whooshing.tube-vapor", branch: "develop"),
+        .package(url: "https://github.com/whooshing-workshop/whooshing.tube-vapor", from: "1.0.0"),
         // 🪩 Whooshing 权限系统模块驱动
-         .package(url: "https://github.com/whooshing-workshop/whooshing.driver-privilege-system.git", branch: "develop"),
+         .package(url: "https://github.com/whooshing-workshop/whooshing.driver-privilege-system.git", from: "1.0.8"),
         // 🔵 Swift 高性能网络通讯模块
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0")
     ],
