@@ -76,3 +76,70 @@ extension PrivilegeModule<ResourceList> {
 extension Request {
     var privilegeModule: PrivilegeModule<ResourceList> { PrivilegeModule.module }
 }
+
+extension Route {
+    @discardableResult
+    func privilege(
+        name: String? = nil,
+        summary: String? = nil,
+        by policy: PrivilegePolicy
+    ) -> Self {
+        self.privilege(
+            using: [.init(name: name, summary: summary, policy: policy.policy)]
+        )
+    }
+    
+    @discardableResult
+    func privilege(
+        name: String? = nil,
+        summary: String? = nil,
+        by policy: @Sendable @escaping (PrivilegePolicy) -> PrivilegePolicy
+    ) -> Self {
+        self.privilege(
+            using: [.init(name: name, summary: summary, policy: policy(.init()).policy)]
+        )
+    }
+    
+    @discardableResult
+    func privilege(
+        using privilege: PrivilegeModule<ResourceList>.PPrivilege
+    ) -> Self {
+        self.privilege(
+            using: [privilege]
+        )
+    }
+    
+    @discardableResult
+    func privilege(
+        using policies: OrderedSet<PrivilegePolicy>
+    ) -> Self {
+        self.privilege(
+            using: policies.mapToSet { .init(policy: $0.policy) }
+        )
+    }
+    
+    @discardableResult
+    func privilege(
+        using privileges: OrderedSet<PrivilegeModule<ResourceList>.PPrivilege>
+    ) -> Self {
+        self.privilege(
+            bundle: .init(
+                RouterResource(appId: self.path.string + "/" + stamp()),
+                op: .run,
+                using: privileges
+            )
+        )
+    }
+    
+    private func stamp() -> String {
+        // 获取毫秒级时间戳（13 位数字）
+        let timestamp = Int64(Date().timeIntervalSince1970 * 1000)
+        
+        // 生成 0 ~ 99999 的随机数，并用 0 补齐 5 位
+        let randomPart = Int.random(in: 0...99999)
+        let randomString = String(format: "%05d", randomPart)
+        
+        // 拼接输出（共 18 位纯数字）
+        return "\(timestamp)/\(randomString)"
+    }
+}

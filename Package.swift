@@ -19,7 +19,7 @@ let package = Package(
         // 🪩 Whooshing 权限系统模块驱动
          .package(url: "https://github.com/whooshing-workshop/whooshing.driver-privilege-system.git", branch: "develop"),
         // 🔵 Swift 高性能网络通讯模块
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0")
     ],
     targets: [
         .executableTarget(

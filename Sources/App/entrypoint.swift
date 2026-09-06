@@ -3,9 +3,6 @@ import FileStorageDriver
 import PrivilegeModuleDriver
 
 /// 该函数为入口函数，是整个 Whooshing 服务的执行起始点
-/// 该函数根据环境变量(API, HTTPS)分别设置服务类型，并进行初始化
-/// 环境变量可在 Package.swift 中设置
-/// 不同服务的 Application 实例可以分别通过 Woo.api, Woo.inline, Woo.https 来取得
 /// 要对不同的实例进行额外配置，在 configure.swift 进行额外配置
 ///
 /// 服务运行时，会根据启动参数决定所运行的模式
@@ -62,42 +59,9 @@ func db(name: String, from service: String) -> Environment.DB {
     return db
 }
 
-/// 用于调试模式的参数，仅在独立调试和测试模式下生效，不会在生产或非独立开发模式下生效
-/// 关于模式，见 `Whooshing.Mode`
-struct DebuggingParameters {
-    /// 服务监听的段口号
-    static let port = 6500
-    
-    /// 初始化文件加密存储模块的配置，此处设置，将连接到所有的服务模块
-    /// FileStorage 为全局单例模式，一个服务模块仅能部署一个文件存储实例
-    /// 这些参数仅在独立测试环境中可用
-    /// 生产环境中将由 Whooshing 系统提供所有的配置参数
-    ///
-    /// dir 参数指定该文件系统的加密文件所存储的真实磁盘位置
-    /// 若该 URL 路径不存在，系统会自动创建包括所有的路径中间目录
-    /// 作为默认配置，FileStorage 的加密文件将保存在 ~/app_file_storage 文件夹中
-    static let fileStorageParas = Environment.FS(
-        dir: URL.homeDirectoryURL.appending(component: "app_file_storage")
-    )
-    
-    /// 初始化权限模块的配置，此处设置，将连接到所有的服务模块
-    /// PrivilegeModule 为全局单例模式，一个服务模块仅能部署一个权限模块实例
-    /// 这些参数仅在独立测试环境中可用
-    /// 生产环境中将由 Whooshing 系统提供所有的配置参数
-    ///
-    /// 权限主系统依赖 EOPA 进行权限仲裁操作，确保该服务已经部署，并提供:
-    ///     - scheme: 连线协议 http 或 https
-    ///     - host: EOPA 所在的 ip 地址或域名
-    ///     - port: EOPA 监听的端口号
-    static let privilegeModuleParas = Environment.PM(
-        eopa: .init(
-            scheme: .http,
-            port: 8181,
-            host: "localhost"
-        ),
-        apiStrategy: apiValidateStrategy
-    )
-    
+// MARK: - 调试数据区
+
+struct DebuggingDatas {
     /// 测试环境中权限模块用于创建 nobody 角色(无权限基本角色，或称默认角色)的 ID(除非其进行过修改)
     ///
     /// 指定 ID 创建用于方便测试或其他目的，指定 nil 表示其使用了随机的 UUID
@@ -178,7 +142,7 @@ struct DebuggingParameters {
         WhitelistAuthData(
             token: .testMake(
                 credential: "0rZ5GsQqysbOvm/Ya7+QhA==",
-                token: "4r0MHtw29zNz+DfyDo8Bzvn02kyoewqYNndSo38AuLY=",
+                token: "4r0MHtw29zNz+DfyDo8Bzvn02kyoewqYNndSo38AuLY=",  // 加密后的 Token 为 `Sw4umh/+QSDU1lQWF8Pyr+rZFQXRbSr+fuu9eE2K2GNumz02UqZo1VgKXnhKCMlH9dKbwE/WfZf0uvYMmpSwYSCAk/cwxeW//MnqE9i+8a5qjhnCQDeU3dyMYZI=`
                 user: .set(testingUsers[0])
             ),
             roles: [
@@ -188,7 +152,7 @@ struct DebuggingParameters {
         WhitelistAuthData(
             token: .testMake(
                 credential: "bRRPIiYbt0t4RzfqeeHSkg==",
-                token: "jXTz4vTQk0O/XFIjWQIHLC7z9/E0/4VtEb+LkF8IcA4=",
+                token: "jXTz4vTQk0O/XFIjWQIHLC7z9/E0/4VtEb+LkF8IcA4=",  // 加密后的 Token 为 `VOWKRKOVQrAhwisfv1KaRAfzX4Kj/UI0mGsn/1gd8moVYMpziNcJHDxjEagWQfPUIgewWv18oOiYbmnsJruZNappigsn9MuPPTSDvEMs2PyHi+1Oz6NercFNpSw=`
                 user: .set(testingUsers[1])
             ),
             roles: [
@@ -200,7 +164,7 @@ struct DebuggingParameters {
     
     /// api 服务的用户身份验证策略
     ///
-    /// 无论是 `.debuging` 还是 `.remote`，该设置**仅生效与本地独立测试**
+    /// 无论是 `.debuging`, `.local` 还是 `.remote`，该设置**仅生效与本地独立测试**
     /// 在生产环境的服务环境中，api 验证会以所传入的环境变量为准
     ///
     /// 在调试模式(`.debuging`)下可设置身份白名单，请见 apiAuthenticates
@@ -211,13 +175,31 @@ struct DebuggingParameters {
     /// `static let apiValidateStrategy: ApiValidator.Strategy = .remote(authURL: .init(string: "http://localhost:6501")!)`
     ///
     /// 默认提供 debug 配置
-    static let apiValidateStrategy: ApiValidator.Strategy = .debuging(
-        whitelist: apiAuthenticates
-    )
+//    static let apiValidateStrategy: ApiValidator.Strategy = .debuging(
+//        whitelist: apiAuthenticates
+//    )
+    static let apiValidateStrategy: ApiValidator.Strategy = .remote(authURL: .init(string: "http://localhost:6501")!)
     
-    /// 本模块的 ID，取自 DebugingModuleController 中记录的服务 ID 列表的第二个(第一个一般是认证模块的 ID)
-    /// 仅在生产环境为开发或测试模式才生效
-    static let moduleId = serviceIds[1]
+    /// 权限仲裁的验证策略
+    ///
+    /// 无论是 `.debuging` 还是 `.remote`，该设置**仅生效与本地独立测试**
+    /// 在生产环境的服务环境中，权限仲裁验证会以所传入的环境变量为准
+    ///
+    /// 在调试模式(`.debuging`)下可设置一个回调函数，用于控制用户是否拥有其权限，指定 true 表示该用户可进行后续操作，否则将被拒绝
+    /// 在正常模式(`.remote`)下可设置仲裁服务的 URL 链接。届时，本模块将仲裁信息转发与该仲裁服务以进行验证
+    ///
+    /// 若要连接到本机上的另一个权限认证模块进程(运行在 6501 端口)，可使用
+    /// `static let arbitrateStrategy: ArbitrateStrategy = .remote(arbiURL: .init(string: "http://localhost:6501")!)`
+    ///
+    /// 默认提供 debug 配置
+//    static let arbitrateStrategy: ArbitrateStrategy = .debuging { (
+//        req: Request,
+//        resource: AnyResource,
+//        operation: AnyOperation
+//    ) async throws -> Bool in
+//        true
+//    }
+    static let arbitrateStrategy: ArbitrateStrategy = .remote(arbiURL: .init(string: "http://localhost:6501")!)
     
     /// 该模块接受的来源服务的 ID
     ///
@@ -232,6 +214,50 @@ struct DebuggingParameters {
         UUID(uuidString: "C59C74DC-AF7F-4497-854B-75561D9FE995")!,
         UUID(uuidString: "F02F2803-BF88-4B51-A743-B3AA0F3FF804")!
     ]
+}
+
+// MARK: - 调试参数区
+
+/// 用于调试模式的参数，仅在独立调试和测试模式下生效，不会在生产或非独立开发模式下生效
+/// 关于模式，见 `Whooshing.Mode`
+struct DebuggingParameters {
+    /// 服务监听的段口号
+    static let port = 6500
+    
+    /// 初始化文件加密存储模块的配置，此处设置，将连接到所有的服务模块
+    /// FileStorage 为全局单例模式，一个服务模块仅能部署一个文件存储实例
+    /// 这些参数仅在独立测试环境中可用
+    /// 生产环境中将由 Whooshing 系统提供所有的配置参数
+    ///
+    /// dir 参数指定该文件系统的加密文件所存储的真实磁盘位置
+    /// 若该 URL 路径不存在，系统会自动创建包括所有的路径中间目录
+    /// 作为默认配置，FileStorage 的加密文件将保存在 ~/app_file_storage 文件夹中
+    static let fileStorageParas = Environment.FS(
+        dir: URL.homeDirectoryURL.appending(component: "app_file_storage")
+    )
+    
+    /// 初始化权限模块的配置，此处设置，将连接到所有的服务模块
+    /// PrivilegeModule 为全局单例模式，一个服务模块仅能部署一个权限模块实例
+    /// 这些参数仅在独立测试环境中可用
+    /// 生产环境中将由 Whooshing 系统提供所有的配置参数
+    ///
+    /// 权限主系统依赖 EOPA 进行权限仲裁操作，确保该服务已经部署，并提供:
+    ///     - scheme: 连线协议 http 或 https
+    ///     - host: EOPA 所在的 ip 地址或域名
+    ///     - port: EOPA 监听的端口号
+    static let privilegeModuleParas = Environment.PM(
+        eopa: .init(
+            scheme: .http,
+            port: 8181,
+            host: "localhost"
+        ),
+        apiStrategy: DebuggingDatas.apiValidateStrategy,
+        arbitrateStrategy: DebuggingDatas.arbitrateStrategy
+    )
+    
+    /// 本模块的 ID，取自 DebugingModuleController 中记录的服务 ID 列表的第二个(第一个一般是认证模块的 ID)
+    /// 仅在生产环境为开发或测试模式才生效
+    static let moduleId = DebuggingDatas.serviceIds[1]
     
     /// 模块管理器的访问链接，模块管理器登记了所有模块的信息
     /// 需要用于来源服务验证，作为测试，可走本地巡回路径
@@ -329,6 +355,7 @@ extension Woo {
     static func main() async throws {
         loggerBootstrap()
         driverInits()
+        nexus.tube.app.lifecycle.use(ResourceAutoRegister(module: PrivilegeModule.module))
         try await configure(nexus)
         try await nexus.executeWithAsyncShutdown()
     }
