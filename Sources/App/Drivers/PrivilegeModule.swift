@@ -140,12 +140,9 @@ extension Route {
     }
     
     /// 生成**稳定**的资源标识：`"<METHOD> <path>"`，同一路由多次登记时追加 `#<序号>`。
-    ///
-    /// 【修复 FINDINGS #12】原实现把“毫秒时间戳/随机数”拼进 appId，导致每次启动资源 ID 都不同：
-    /// `ResourceAutoRegister` 每次启动都会删除旧资源并重建，权限主系统中任何按 appId 精确匹配的策略在重启后即失效，
-    /// 只能写前缀匹配。改为稳定 ID 后，策略可以直接写 `input.resource.appId == "GET /api/no_protect"`。
     private func stableAppId() -> String {
-        let base = "\(self.method) \(self.path.string)"
+        // Vapor 的 `[PathComponent].string` 只是用 "/" 拼接各段（"api/no_protect"），不带前导斜杠，这里补上以符合 "GET /api/no_protect" 的约定
+        let base = "\(self.method) /\(self.path.string)"
         // 同一 Route 上此前已登记的资源数量（Route.privilege(bundle:) 会把多次登记追加到 userInfo 中）
         // 注意："resource_key" 是 PrivilegeModuleDriver 中 `Route.resourceKey` 的字面值（该常量为 internal，无法直接引用）
         let existing = (self.userInfo["resource_key"] as? OrderedSet<AnyResource>)?.count ?? 0
