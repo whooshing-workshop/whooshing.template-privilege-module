@@ -8,6 +8,11 @@ struct FileAttributes: Content {
     let path: StoragePath
 }
 
+/// 示例：加密文件存储（FileStorage）的写 / 读 / 删（**无鉴权**，仅作模板演示）。
+///
+///     PUT    /file   body: { data: Base64, path: StoragePath } → StoragePath
+///     POST   /file   body: StoragePath                        → Data(Base64)
+///     DELETE /file   body: StoragePath                        → StoragePath
 struct FileController: RouteCollection {
     
     func boot(routes: any RoutesBuilder) throws {

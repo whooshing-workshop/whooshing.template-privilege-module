@@ -1,6 +1,14 @@
 import Fluent
 import VaporTube
 
+/// 示例：模块自有的业务表 `users` 的增删查（**无鉴权**，仅作模板演示）。
+///
+///     GET    /users                  → [UserDTO]
+///     GET    /users/find?email=      → UserDTO（不存在 → 400）
+///     POST   /users/register         body: UserDTO → 200（邮箱唯一，重复 → 非 2xx）
+///     DELETE /users/:email           → 204（不存在 → 400）
+///
+/// 生产模块中这类接口应当挂到 `apiProtected` 分组下并登记 `.privilege(...)`。
 struct UserController: RouteCollection {
 
     func boot(routes: any RoutesBuilder) throws {

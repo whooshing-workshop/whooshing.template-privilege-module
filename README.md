@@ -307,18 +307,20 @@ apiProtected.get("user_required") { req async throws in
     $0.allow { $0.user.email == "someone@example.com" }
 }
 
-apiProtected.get("role_required") { req async throws in
-    try req.auth.require(AuthData.self)
-}.privilege {
-    $0.allow { $0.role.name == "admin" }
-}
+// 需要特定角色：privilege 策略的 input 不包含角色信息，角色约束应放在权限主系统的“角色策略”上，
+// 或在 handler 中检查 AuthData.role（主系统 /inline/authenticate 已校验该角色确实任命给了该用户）
+apiProtected.get("role_required") { req async throws -> AuthData in
+    let auth = try req.auth.require(AuthData.self)
+    guard auth.role.name == "admin" else { throw Abort(.forbidden) }
+    return auth
+}.privilege(by: .allowAll)
 
 apiProtected.get("no_protect") { req async throws in
     try req.auth.require(AuthData.self)
 }.privilege(by: .allowAll)
 ```
 
-> 声明了 `.privilege(...)` 的路由会被 `ResourceAutoRegister` 在应用启动后自动同步至权限数据库：旧资源与权限被清理，新资源、权限及其绑定关系被重建。关于策略 DSL 的完整语法，请见 [whooshing.toolbox-privilege-system](https://github.com/whooshing-workshop/whooshing.toolbox-privilege-system)
+> 声明了 `.privilege(...)` 的路由会被 `ResourceAutoRegister` 在应用启动后自动同步至权限数据库：旧资源与权限被清理，新资源、权限及其绑定关系被重建。路由资源的 `appId` 为稳定的 `"<METHOD> <path>"`（如 `"GET /api/no_protect"`），可在权限主系统的角色 / 域策略中以 `input.resource.appId` 精确引用。关于策略 DSL 的完整语法，请见 [whooshing.toolbox-privilege-system](https://github.com/whooshing-workshop/whooshing.toolbox-privilege-system)
 
 -------
 
