@@ -132,7 +132,14 @@
    static let serviceIds = [ ... ]
    ```
 
-   > 若要与本机运行的权限主系统联调，把上述两个策略改为 `.remote(...)` 并指向其地址即可
+   > **与权限主系统联调 / 跑集成测试时必须把两个策略都改为 `.remote(...)`**：
+   >
+   > ```swift
+   > static let apiValidateStrategy: ApiValidator.Strategy = .remote(authURL: .init(string: "http://localhost:6501")!)
+   > static let arbitrateStrategy: ArbitrateStrategy = .remote(arbiURL: .init(string: "http://localhost:6501")!)
+   > ```
+   >
+   > 默认的 `.debuging` 白名单模式**不会**把凭据转发到权限主系统，只认 `apiAuthenticates` 里写死的两个账号；其它任何用户访问 `/api/*` 都会得到 `401 [Debug] 凭据或 Token 未在白名单中`。[whooshing.integration-tests](https://github.com/whooshing-workshop/whooshing.integration-tests) 会自动识别这种情况并跳过端到端用例。
 
 6. **定义资源与权限模块**
 
@@ -216,7 +223,13 @@
 
 10. **运行项目**
 
-    使用 Xcode 或命令行运行：
+    首次运行先执行数据库迁移（示例 `users` 表；未迁移时 `POST /users/register` 会 500）：
+
+    ```sh
+    swift run App migrate --env development
+    ```
+
+    然后使用 Xcode 或命令行运行：
 
     ```sh
     swift run App serve --env development
@@ -273,10 +286,10 @@ GET /hello
 以及两个示例控制器 `FileController` 与 `UserController`：
 
 ```swift
-FileController 提供:
-    - PUT    /file: 存储文件
-    - DELETE /file: 删除文件
-    - POST   /file: 读取文件
+FileController 提供（StoragePath 在 JSON 中为路径组件数组，如 ["docs", "a.txt"]）:
+    - PUT    /file: 存储文件，Body { data: Base64, path: StoragePath }
+    - DELETE /file: 删除文件，Body StoragePath
+    - POST   /file: 读取文件，Body StoragePath，返回文件内容
 
 UserController 提供:
     - GET    /users: 列出所有用户
@@ -307,20 +320,30 @@ apiProtected.get("user_required") { req async throws in
     $0.allow { $0.user.email == "someone@example.com" }
 }
 
-// 需要特定角色：privilege 策略的 input 不包含角色信息，角色约束应放在权限主系统的“角色策略”上，
-// 或在 handler 中检查 AuthData.role（主系统 /inline/authenticate 已校验该角色确实任命给了该用户）
-apiProtected.get("role_required") { req async throws -> AuthData in
-    let auth = try req.auth.require(AuthData.self)
-    guard auth.role.name == "admin" else { throw Abort(.forbidden) }
-    return auth
-}.privilege(by: .allowAll)
+// 需要特定角色：仲裁 input 含 role 对象（toolbox ≥ V1.1.0.14），可直接在 privilege 策略中引用 $0.role
+// 注意：即便这里放行，该角色仍须在本模块下至少配置一条角色策略，否则仲裁会因“角色无策略”被拒
+apiProtected.get("role_required") { req async throws in
+    try req.auth.require(AuthData.self)
+}.privilege {
+    $0.allow { $0.role.name == "admin" }
+}
 
 apiProtected.get("no_protect") { req async throws in
     try req.auth.require(AuthData.self)
 }.privilege(by: .allowAll)
 ```
 
-> 声明了 `.privilege(...)` 的路由会被 `ResourceAutoRegister` 在应用启动后自动同步至权限数据库：旧资源与权限被清理，新资源、权限及其绑定关系被重建。路由资源的 `appId` 为稳定的 `"<METHOD> <path>"`（如 `"GET /api/no_protect"`），可在权限主系统的角色 / 域策略中以 `input.resource.appId` 精确引用。关于策略 DSL 的完整语法，请见 [whooshing.toolbox-privilege-system](https://github.com/whooshing-workshop/whooshing.toolbox-privilege-system)
+> 声明了 `.privilege(...)` 的路由会被 `ResourceAutoRegister` 在应用启动后自动同步至权限数据库：旧资源与权限被清理，新资源、权限及其绑定关系被重建。路由资源的 `appId` 为稳定的 `"<METHOD> /<path>"`（如 `"GET /api/no_protect"`，同一路由多次登记依次追加 `#1`、`#2`…），可在权限主系统的角色 / 域策略中以 `input.resource.appId` 精确引用，例如 `allow if { input.resource.appId == "GET /api/no_protect" }`。关于策略 DSL 与仲裁 input 的完整结构，请见 [whooshing.toolbox-privilege-system](https://github.com/whooshing-workshop/whooshing.toolbox-privilege-system)
+
+#### 受保护路由的仲裁结果
+
+`/api/*` 请求经 `ApiValidator(.remote)` 认证后，由 `Arbitrator(.remote)` 向权限主系统 `POST /inline/arbitrate`，结果为：
+
+```
+角色在本模块下的全部策略 AND 用户所有域（直接 / 群组 / 祖先群组）在本模块下的策略 AND 路由 privilege 策略
+```
+
+任一为 false、角色在本模块下没有任何策略、或主系统返回错误，模块统一响应 **401**。因此给一个新角色开放本模块的访问，至少要在权限主系统为它创建一条本模块（`module_id` = 本模块 ID）的角色策略，例如 `allow if { true }` 或按 `input.operation` / `input.resource.appId` 细分。
 
 -------
 

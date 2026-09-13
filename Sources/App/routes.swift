@@ -18,9 +18,10 @@ import PrivilegeModuleDriver
 ///      结果 = 角色策略(本模块) AND 用户全部域的策略(本模块) AND 路由 privilege 策略；任一为 false → 401。
 ///
 /// `.privilege { $0.allow { ... } }` 中的闭包参数是 **privilege 策略** 的 input 镜像（`PrivilegePolicyInput`），
-/// 只有 `privilegeId / operation / user / resource` 四个字段——**没有 role**。
-/// “必须是某个角色”这种约束应放在权限主系统的 **角色策略** 上（为该角色在本模块下配置策略），
-/// 或像下面 `role_required` 那样在 handler 中检查 `AuthData.role`。
+/// 可访问 `privilegeId / operation / user / role / resource`（toolbox ≥ V1.1.0.14 起仲裁 input 含 `role` 对象），
+/// 因此 `role_required` 可以直接写 `$0.role.name == "admin"`。
+/// 注意 privilege 策略只是 AND 中的一项：即便它放行，该角色仍须在本模块下至少有一条角色策略，
+/// 否则权限主系统会以“角色无策略”拒绝（toolbox ≥ V1.1.1.8），模块响应 401。
 func routes(_ nexus: Nexus<VaporTube>) throws {
     nexus.tube.app.get { req async in
         "It works!"
